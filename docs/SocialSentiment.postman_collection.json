@@ -1,0 +1,49 @@
+{
+  "info": {
+    "name": "SocialSentiment API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4001"
+    },
+    {
+      "key": "analysisId",
+      "value": "replace-with-created-uuid"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create analysis",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/analyses",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"https://www.instagram.com/p/ABC123/\",\n  \"comments\": [\n    \"Ужасно\",\n    \"Отлично\",\n    \"Когда?\"\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "List recent",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/analyses"
+      }
+    },
+    {
+      "name": "Get analysis",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}"
+      }
+    }
+  ]
+}
