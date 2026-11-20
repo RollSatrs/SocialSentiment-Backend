@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 target/
 .idea/
 .vscode/
@@ -6,3 +7,19 @@ target/
 .env
 .env.*
 .DS_Store
+=======
+# Maven
+target/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+>>>>>>> a24c3e2 (chore: ignore Maven build artifacts)
