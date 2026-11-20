@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1/analyses")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:4000")
 public class InstagramAnalysisController {
     private static final Pattern POST_PATH = Pattern.compile("^/(p|reel|tv)/[A-Za-z0-9_-]+/?$");
 
