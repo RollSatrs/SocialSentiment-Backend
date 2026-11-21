@@ -62,3 +62,21 @@ async def collect(body: CollectRequest):
         if isinstance(item, dict) and isinstance(item.get("text"), str) and item.get("text", "").strip()
     ]
     return {"source": "scrapfly", "comments": texts[:500], "count": min(len(texts), 500)}
+
+class SentimentRequest(BaseModel):
+    texts: list[str]
+
+
+@app.post("/sentiment")
+def sentiment(body: SentimentRequest):
+    if len(body.texts) > 500 or any(not isinstance(t, str) or not t.strip() or len(t) > 2000 for t in body.texts):
+        raise HTTPException(status_code=400, detail="Provide up to 500 nonempty texts, max 2000 characters each")
+    if not body.texts:
+        return {"model": "cardiffnlp/twitter-xlm-roberta-base-sentiment", "results": []}
+    try:
+        from sentiment_model import classify_batch
+        results = classify_batch(body.texts)
+    except Exception:
+        logger.exception("Sentiment model inference failed")
+        raise HTTPException(status_code=503, detail="Sentiment model unavailable")
+    return {"model": "cardiffnlp/twitter-xlm-roberta-base-sentiment", "results": results}

@@ -11,8 +11,9 @@ class AnalysisServiceTest {
     private final AnalysisRepository repository = mock(AnalysisRepository.class);
     private final InstagramService instagram = mock(InstagramService.class);
     private final PythonInstagramService parser = mock(PythonInstagramService.class);
+    private final AiSentimentService ai = mock(AiSentimentService.class);
     private final AnalysisService service = new AnalysisService(
-        repository, new InstagramUrlService(), new SentimentService(), instagram, parser);
+        repository, new InstagramUrlService(), new SentimentService(), instagram, parser, ai, "dictionary");
 
     @Test void persistsAnalysisWithComments() {
         when(repository.save(any(AnalysisEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
