@@ -1,9 +1,12 @@
 """HTTP adapter for Scrapfly's Instagram comments example (non-commercial educational use)."""
 import os
+import logging
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="SocialSentiment Instagram Parser", version="0.1.0")
 
@@ -49,7 +52,8 @@ async def collect(body: CollectRequest):
     try:
         comments = await scrape_post_comments(body.url)
     except Exception:
-        # No upstream error bodies or tokens are exposed to API consumers.
+        # Log the failure server-side; keep upstream details out of API responses.
+        logger.exception("Instagram collection failed")
         raise HTTPException(status_code=502, detail="Instagram collection failed")
 
     texts = [
