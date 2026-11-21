@@ -20,7 +20,7 @@ services:
     environment:
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/socialsentiment
-      APP_SENTIMENT_MODE: ${APP_SENTIMENT_MODE:-ai}
+      APP_SENTIMENT_MODE: ${APP_SENTIMENT_MODE:-dictionary}
       APP_PARSER_BASE_URL: http://host.docker.internal:4002
     extra_hosts:
       - "host.docker.internal:host-gateway"
