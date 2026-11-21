@@ -1,28 +1,36 @@
-# Test plan
+# Тестирование SocialSentiment
 
-## Unit tests (JUnit 5 + Mockito)
-- Negative text classification.
-- Positive text classification.
-- Neutral text classification.
-- English negative text classification.
-- Empty text validation.
-- Analysis persistence with counts.
-- No fabricated comments when collector unavailable.
-- Invalid Instagram URL.
-- Missing analysis ID.
+## Unit tests
+В `src/test/java/com/socialsentiment/backend/analysis/` находятся JUnit/Mockito тесты бизнес-логики:
+- Сохранение комментариев и подсчёт тональностей
+- Маршрутизация запроса через Scrapfly
+- Маршрутизация через Meta Graph API
+- Повторная классификация сохранённых комментариев
+- Некорректный URL
+- Несуществующий ID
 
-Run: `mvn test`
+Также есть `SentimentServiceTest` и тест загрузки Spring context.
 
-## API smoke test
-Start backend on port 4001, then:
-```bash
-curl -i -X POST http://localhost:4001/api/v1/analyses \
-  -H 'Content-Type: application/json' \
-  -d '{"url":"https://www.instagram.com/p/ABC123/","comments":["Ужасно","Отлично","Когда?"]}'
-curl -i http://localhost:4001/api/v1/analyses
+Запуск:
+```sh
+mvn test
 ```
 
-Expected: HTTP 201 for POST, 200 for GET, total=3, one item per sentiment.
-Import `SocialSentiment.postman_collection.json` into Postman to run manually.
+## Проверка REST API
+Импортируйте `SocialSentiment.postman_collection.json` в Postman, затем выполните запросы по порядку:
+1. Create manual analysis — 201, сохраняет ID
+2. List recent — 200, массив
+3. Get created analysis — 200, тот же ID
+4. Reanalyze — 201, нужен запущенный Python sentiment endpoint
+5. Invalid URL — 400
 
-**Status:** test code and collection are committed; local test execution is required before claiming pass.
+Автоматический Scrapfly тест отдельно, чтобы не тратить кредиты без необходимости.
+
+## Проверка интеграции
+- PostgreSQL поднят и доступен Java
+- Python `GET /health` возвращает 200
+- Java POST сохраняет анализ в PostgreSQL
+- Frontend отображает отчёт и историю
+
+## Статус
+Тестовые файлы и Postman-коллекция подготовлены. Успешность прогонов должна быть подтверждена логами локального запуска или GitHub Actions; наличие файлов не означает прохождение тестов.
