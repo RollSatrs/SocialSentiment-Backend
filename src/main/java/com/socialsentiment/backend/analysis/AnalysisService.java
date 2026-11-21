@@ -9,20 +9,22 @@ public class AnalysisService {
     private final AnalysisRepository repository;
     private final InstagramUrlService urls;
     private final SentimentService sentiment;
+    private final InstagramService instagram;
 
-    public AnalysisService(AnalysisRepository repository, InstagramUrlService urls, SentimentService sentiment) {
-        this.repository = repository; this.urls = urls; this.sentiment = sentiment;
+    public AnalysisService(AnalysisRepository repository, InstagramUrlService urls, SentimentService sentiment, InstagramService instagram) {
+        this.repository = repository; this.urls = urls; this.sentiment = sentiment; this.instagram = instagram;
     }
 
     @Transactional
     public AnalysisDto.Response analyze(AnalysisDto.Request request) {
         String url = urls.normalize(request.url());
-        List<String> supplied = request.comments() == null ? List.of() : request.comments();
+        boolean automatic = request.comments() == null || request.comments().isEmpty();
+        List<String> supplied = automatic ? instagram.commentsForPost(url) : request.comments();
         if (supplied.size() > 500) throw new InvalidAnalysisException("Не более 500 комментариев.");
         boolean hasComments = supplied.stream().anyMatch(s -> s != null && !s.isBlank());
         AnalysisEntity entity = new AnalysisEntity(url,
-            hasComments ? "COMPLETED" : "COLLECTOR_NOT_CONNECTED",
-            hasComments ? "user_supplied" : "none");
+            "COMPLETED",
+            automatic ? "instagram_api" : "user_supplied");
         for (String raw : supplied) {
             if (raw == null || raw.isBlank()) continue;
             String text = raw.trim();
@@ -52,8 +54,8 @@ public class AnalysisService {
         int positive = (int) comments.stream().filter(c -> c.sentiment().equals("positive")).count();
         int neutral = comments.size() - negative - positive;
         String message = comments.isEmpty()
-            ? "Автоматический сбор Instagram-комментариев пока недоступен. Реальные комментарии можно вставить вручную."
-            : "Анализ предоставленных комментариев выполнен словарным классификатором; это не AI-модель.";
+            ? "Комментарии не найдены или недоступны для этой публикации."
+            : "Анализ комментариев выполнен словарным классификатором; это не AI-модель.";
         return new AnalysisDto.Response(entity.getId(), entity.getStatus(), entity.getPostUrl(),
             entity.getSource(), message, comments.size(), negative, neutral, positive,
             entity.getCreatedAt(), comments);
