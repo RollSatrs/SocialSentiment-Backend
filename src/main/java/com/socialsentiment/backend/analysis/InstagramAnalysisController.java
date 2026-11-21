@@ -22,6 +22,12 @@ public class InstagramAnalysisController {
         return service.analyze(request);
     }
 
+    @PostMapping("/{id}/reanalyze")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AnalysisDto.Response reanalyze(@PathVariable UUID id) {
+        return service.reanalyzeWithAi(id);
+    }
+
     @GetMapping("/{id}")
     public AnalysisDto.Response get(@PathVariable UUID id) {
         return service.get(id);

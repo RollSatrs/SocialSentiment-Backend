@@ -50,6 +50,24 @@ class AnalysisServiceTest {
         verifyNoInteractions(parser);
     }
 
+    @Test void reanalyzesSavedCommentsWithoutScraping() {
+        UUID id = UUID.randomUUID();
+        AnalysisEntity original = new AnalysisEntity("https://www.instagram.com/p/ABC123/", "COMPLETED", "scrapfly");
+        original.addComment(new CommentEntity("Отвратительное место", "neutral"));
+        original.addComment(new CommentEntity("Спасибо!", "positive"));
+        when(repository.findById(id)).thenReturn(Optional.of(original));
+        when(ai.classify(List.of("Отвратительное место", "Спасибо!")))
+            .thenReturn(List.of("negative", "positive"));
+        when(repository.save(any(AnalysisEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        var response = service.reanalyzeWithAi(id);
+        assertEquals("reanalyzed_ai", response.source());
+        assertEquals(2, response.total());
+        assertEquals(1, response.negative());
+        assertEquals(1, response.positive());
+        verifyNoInteractions(instagram, parser);
+        assertEquals("neutral", original.getComments().get(0).getSentiment());
+    }
+
     @Test void rejectsInvalidUrl() {
         assertThrows(InvalidAnalysisException.class,
             () -> service.analyze(new AnalysisDto.Request("https://evil.example/p/ABC123/", List.of())));

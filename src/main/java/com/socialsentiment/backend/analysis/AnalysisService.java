@@ -61,6 +61,22 @@ public class AnalysisService {
         return toResponse(repository.save(entity));
     }
 
+
+    @Transactional
+    public AnalysisDto.Response reanalyzeWithAi(UUID id) {
+        AnalysisEntity original = repository.findById(id).orElseThrow(
+            () -> new AnalysisNotFoundException("Анализ не найден."));
+        List<String> texts = original.getComments().stream().map(CommentEntity::getText).toList();
+        if (texts.isEmpty()) throw new InvalidAnalysisException("В сохранённом анализе нет комментариев.");
+        List<String> labels = ai.classify(texts);
+        if (labels.size() != texts.size()) throw new IllegalStateException("AI returned mismatched labels.");
+        AnalysisEntity result = new AnalysisEntity(original.getPostUrl(), "COMPLETED", "reanalyzed_ai");
+        for (int i = 0; i < texts.size(); i++) {
+            result.addComment(new CommentEntity(texts.get(i), labels.get(i)));
+        }
+        return toResponse(repository.save(result));
+    }
+
     @Transactional(readOnly = true)
     public AnalysisDto.Response get(UUID id) {
         return toResponse(repository.findById(id).orElseThrow(
@@ -82,7 +98,7 @@ public class AnalysisService {
         int neutral = comments.size() - negative - positive;
         String message = comments.isEmpty()
             ? "Комментарии не найдены или недоступны для этой публикации."
-            : "ai".equalsIgnoreCase(sentimentMode)
+            : ("reanalyzed_ai".equals(entity.getSource()) || "ai".equalsIgnoreCase(sentimentMode))
                 ? "Анализ выполнен мультиязычной моделью XLM-RoBERTa; результаты вероятностные."
                 : "Анализ выполнен словарным классификатором; это не AI-модель.";
         return new AnalysisDto.Response(entity.getId(), entity.getStatus(), entity.getPostUrl(),
