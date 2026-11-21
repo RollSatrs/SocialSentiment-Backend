@@ -1,20 +1,32 @@
-# Architecture and review notes
+# Architecture — SocialSentiment
 
-Frontend: Next.js 16, React, TypeScript, Tailwind, port 4000.
-Backend: Java 21, Spring Boot, REST, JPA, port 4001.
-Database: PostgreSQL, port 5432.
+```text
+Next.js 16 (port 4000)
+       |
+       v HTTP JSON
+Spring Boot 4 / Java 21 (port 4001)
+       |
+       +--> InstagramAnalysisController (REST + DTO)
+       |       |
+       |       v
+       |   AnalysisService (бизнес-логика)
+       |       +--> InstagramUrlService (проверка URL)
+       |       +--> PythonInstagramService (сбор через Scrapfly)
+       |       +--> InstagramService (другой источник)
+       |       +--> AiSentimentService (модель через Python API)
+       |       +--> SentimentService (словарный fallback/режим)
+       |       +--> AnalysisRepository (JPA)
+       |                |
+       |                v
+       |            PostgreSQL
+       |
+Python FastAPI (port 4002): Instagram parser + multilingual sentiment model
+```
 
-Request path:
-`Next.js page → InstagramAnalysisController → AnalysisService → InstagramUrlService / SentimentService → AnalysisRepository → PostgreSQL`
-
-Entities are never returned directly from controllers: `AnalysisDto` records form the HTTP contract.
-`ApiExceptionHandler` centralizes 400/404 responses. Spring Boot uses SLF4J/Logback.
-Database password is read from `DB_PASSWORD` environment variable.
-
-### Limitations / next iteration
-- Instagram collection module: not yet implemented; do not claim arbitrary post access.
-- Basic word-list sentiment classifier, not machine learning.
-- No user accounts; history is shared locally.
-- `ddl-auto=update` for development only; use Flyway migrations before production.
-- No deployment or public production security hardening.
-- Integration smoke test: run backend and issue POST/GET requests described in `docs/API.md`.
+- Контроллер возвращает `AnalysisDto.Response`, не JPA Entity.
+- `ApiExceptionHandler` и `InstagramApiExceptionHandler` централизуют обработку ошибок; детали следует проверить для всех внешних сбоев.
+- PostgreSQL credentials через `DB_PASSWORD`; ключ Scrapfly должен передаваться через окружение, не коммититься.
+- Режим классификации зависит от конфигурации backend; наличие AI-модуля не означает, что каждый запрос использует его.
+- `spring.jpa.hibernate.ddl-auto=update` подходит для разработки, но не для production: миграции ещё нужны.
+- Нет авторизации и приватного разделения истории: не размещать публично без доработки.
+- Фронтенд показывает ориентировочные этапы загрузки; backend пока не передаёт real-time progress.

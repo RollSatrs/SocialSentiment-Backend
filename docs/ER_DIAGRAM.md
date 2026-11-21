@@ -1,6 +1,6 @@
-# ER-диаграмма
+# ER-диаграмма SocialSentiment
 
-Вставьте следующий код в https://dbdiagram.io для получения схемы.
+Вставьте DBML в https://dbdiagram.io и экспортируйте PNG для защиты.
 
 ```dbml
 Table analyses {
@@ -19,7 +19,8 @@ Table comments {
 }
 ```
 
-**Связь:** analyses (1) → comments (N). Одна запись анализа содержит много комментариев; каждый комментарий относится ровно к одному анализу. Many-to-Many для текущих сценариев не требуется.
+**Связь:** `analyses 1:N comments`. В Java: `AnalysisEntity.comments` — `@OneToMany`; `CommentEntity.analysis` — `@ManyToOne`. Many-to-Many не требуется.
 
-**Статусы:** `COMPLETED`, `COLLECTOR_NOT_CONNECTED`.
-**Источники:** `user_supplied`, `none`.
+**Источники:** `user_supplied`, `scrapfly`, `instagram_api`, `reanalyzed_ai` (зависят от пути выполнения). Тональности: `negative`, `neutral`, `positive`. Состояния и сообщения об ошибках зависят от способа анализа.
+
+Диаграмма отражает JPA-сущности текущего проекта; конкретные SQL-типы времени зависят от Hibernate/PostgreSQL.
