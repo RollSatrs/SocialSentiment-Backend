@@ -1,25 +1,24 @@
-<<<<<<< HEAD
-target/
-.idea/
-.vscode/
-*.iml
-*.class
-.env
-.env.*
-.DS_Store
-=======
 # Maven
 target/
+*.class
 
 # IDE
 .idea/
 .vscode/
 *.iml
 
-# Environment
+# Environment and secrets
 .env
-.env.local
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+*.pyc
+parser/poetry.lock
+parser/results/
 
 # OS
 .DS_Store
->>>>>>> a24c3e2 (chore: ignore Maven build artifacts)
