@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "SocialSentiment API",
+    "name": "SocialSentiment API — Coursework",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -10,12 +10,12 @@
     },
     {
       "key": "analysisId",
-      "value": "replace-with-created-uuid"
+      "value": ""
     }
   ],
   "item": [
     {
-      "name": "Create analysis",
+      "name": "01 Create manual analysis",
       "request": {
         "method": "POST",
         "header": [
@@ -29,21 +29,106 @@
           "mode": "raw",
           "raw": "{\n  \"url\": \"https://www.instagram.com/p/ABC123/\",\n  \"comments\": [\n    \"Ужасно\",\n    \"Отлично\",\n    \"Когда?\"\n  ]\n}"
         }
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const data = pm.response.json();",
+              "pm.test('3 comments', () => pm.expect(data.total).to.eql(3));",
+              "if (data.id) pm.collectionVariables.set('analysisId', data.id);"
+            ]
+          }
+        }
+      ]
     },
     {
-      "name": "List recent",
+      "name": "02 List recent",
       "request": {
         "method": "GET",
         "url": "{{baseUrl}}/api/v1/analyses"
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('Array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
     },
     {
-      "name": "Get analysis",
+      "name": "03 Get created analysis",
       "request": {
         "method": "GET",
         "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}"
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('Same ID', () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('analysisId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Reanalyze saved comments (requires Python)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/reanalyze"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "pm.test('Reanalyzed source', () => pm.expect(pm.response.json().source).to.eql('reanalyzed_ai'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Invalid URL",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/analyses",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"url\":\"https://invalid.example/post\",\"comments\":[\"test\"]}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 Bad Request', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
